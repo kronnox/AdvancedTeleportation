@@ -10,7 +10,7 @@
  * 
  * ------------------------------------
  * Created by Kronox on March 18, 2018
- * Version: 1.0.2
+ * Version: 1.0.3
  * ------------------------------------
  **/
 
@@ -132,6 +132,19 @@ namespace Eco.Mods.Kronox
             user.Player.SetPosition(homes[user.Player.ID]);
             user.Player.SendTemporaryMessage("Returning to 'home'...");
         }
+
+        public static void CallWarpSign(Player player, String text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            string[] lines = text.Split(new[] { "<br>" }, StringSplitOptions.None);
+
+            if (lines.Length < 2 || !lines[0].Equals("[WARP]") || lines[1].Contains(' '))
+                return;
+
+            Eco.Mods.Kronox.AdvancedTeleportation.Warp(player.User, lines[1]);
+        }
     }
 
 
@@ -189,43 +202,4 @@ namespace Eco.Mods.Kronox
             return dic;
         }
     }
-}
-
-
-// Copyright (c) Strange Loop Games. All rights reserved.
-// See LICENSE file in the project root for full license information.
-
-namespace Eco.Mods.TechTree
-{
-    using System;
-    using System.Linq;
-    using Eco.Gameplay.Components;
-    using Eco.Gameplay.Interactions;
-    using Eco.Gameplay.Objects;
-    using Eco.Shared.Serialization;
-
-
-    [RequireComponent(typeof(CustomTextComponent))]
-    public partial class WoodSignObject : WorldObject
-    {
-        public override InteractResult OnActRight(InteractionContext context)
-        {
-            string text = GetComponent<CustomTextComponent>().Text;
-
-            if (string.IsNullOrWhiteSpace(text))
-                return base.OnActRight(context);
-
-            string[] lines = text.Split(new[] { "<br>" }, StringSplitOptions.None);
-
-            if (lines.Length < 2 || !lines[0].Equals("[WARP]") || lines[1].Contains(' '))
-                return base.OnActRight(context);
-
-            Eco.Mods.Kronox.AdvancedTeleportation.Warp(context.Player.User, lines[1]);
-
-            return base.OnActRight(context);
-        }
-    }
-
-    public partial class SmallWoodSignObject : WoodSignObject
-    { }
 }
