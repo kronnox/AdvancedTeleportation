@@ -114,6 +114,8 @@ namespace Eco.Mods.Kronox
         [ChatCommand("Sets your personal home to your current position", ChatAuthorizationLevel.User)]
         public static void SetHome(User user)
         {
+            Initialize();
+
             if (homes.ContainsKey(user.Player.ID))
                 homes.Remove(user.Player.ID);
             homes.Add(user.Player.ID, user.Player.Position);
@@ -124,6 +126,8 @@ namespace Eco.Mods.Kronox
         [ChatCommand("Teleports you to your home", ChatAuthorizationLevel.User)]
         public static void Home(User user)
         {
+            Initialize();
+
             if (!homes.ContainsKey(user.Player.ID))
             {
                 user.Player.SendTemporaryError("Your home wasn't set yet!");
