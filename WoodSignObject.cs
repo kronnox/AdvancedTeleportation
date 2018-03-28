@@ -7,7 +7,6 @@ namespace Eco.Mods.TechTree
     using Eco.Gameplay.Interactions;
     using Eco.Shared.Serialization;
     using Gameplay.Components;
-    using Gameplay.Components.Auth;
 
     [RequireComponent(typeof(CustomTextComponent))]
     public partial class WoodSignObject : WorldObject

@@ -22,6 +22,7 @@ namespace Eco.Mods.Kronox
     using System.Linq;
     using Eco.Gameplay.Players;
     using Eco.Gameplay.Systems.Chat;
+    using Eco.Mods.Kronox.util;
     using Eco.Shared.Math;
 
     public class AdvancedTeleportation : IChatCommandHandler
@@ -29,15 +30,37 @@ namespace Eco.Mods.Kronox
 
         private static bool initialized = false;
 
-        private static Dictionary<string, Vector3> warps = new Dictionary<string, Vector3>();
-        private static Dictionary<int, Vector3> homes = new Dictionary<int, Vector3>();
+        private static readonly string filePath = "Mods/Kronox/AdvancedTeleportation/";
 
-        static private void Initialize()
+        private static Warps warps = new Warps();
+        private static Homes homes = new Homes();
+        private static Dictionary<int, Vector3> oldHomes = new Dictionary<int, Vector3>();
+
+        private static void Initialize()
         {
             if (!initialized)
             {
-                warps = FileHelper.ReadFromFile("warps.txt");
-                homes = FileHelper.ReadFromFile("homes.txt").ToDictionary(item => int.Parse(item.Key), item => item.Value);
+                warps = ClassSerializer<Warps>.Deserialize(filePath, "warps.json");
+                if (File.Exists(filePath + "warps.txt"))
+                {
+                    foreach (var pair in OldFileHelper.ReadFromFile(filePath, "warps.txt").ToDictionary(item => item.Key, item => item.Value))
+                        if(!warps.Exists(pair.Key))
+                            warps.Add(pair.Key, pair.Value);
+
+                    ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
+                    File.Delete(filePath + "warps.txt");
+                }
+
+
+                homes = ClassSerializer<Homes>.Deserialize(filePath, "homes.json");
+                if (File.Exists(filePath + "homes.txt"))
+                {
+                    oldHomes = OldFileHelper.ReadFromFile(filePath, "homes.txt").ToDictionary(item => int.Parse(item.Key), item => item.Value);
+
+                    if (oldHomes.Count <= 0)
+                        File.Delete(filePath + "homes.txt");
+                }
+                
                 initialized = true;
             }
         }
@@ -49,10 +72,8 @@ namespace Eco.Mods.Kronox
 
             name = name.ToLower();
 
-            if (warps.ContainsKey(name))
-                warps.Remove(name);
             warps.Add(name, user.Player.Position);
-            FileHelper.SaveToFile(warps, "warps.txt");
+            ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
             user.Player.SendTemporaryMessage("Warp '" + name + "' has been sucessfully set to '" + user.Player.Position + "'!");
         }
 
@@ -63,14 +84,14 @@ namespace Eco.Mods.Kronox
 
             name = name.ToLower();
 
-            if (!warps.ContainsKey(name))
+            if (!warps.Exists(name))
             {
                 user.Player.SendTemporaryError("'" + name + "' isn't a known warp!");
                 return;
             }
             warps.Remove(name);
-            FileHelper.SaveToFile(warps, "warps.txt");
-            user.Player.SendTemporaryMessage("Warp '" + name + "' has been sucessfully removes!");
+            ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
+            user.Player.SendTemporaryMessage("Warp '" + name + "' has been sucessfully removed!");
         }
 
         [ChatCommand("Teleports you to a warp point", ChatAuthorizationLevel.User)]
@@ -80,12 +101,12 @@ namespace Eco.Mods.Kronox
 
             name = name.ToLower();
 
-            if (!warps.ContainsKey(name))
+            if (!warps.Exists(name))
             {
                 user.Player.SendTemporaryError("'" + name + "' isn't a known warp!");
                 return;
             }
-            user.Player.SetPosition(warps[name]);
+            user.Player.SetPosition(warps.Get(name));
             user.Player.SendTemporaryMessage("Warping to '" + name + "'...");
         }
 
@@ -96,17 +117,19 @@ namespace Eco.Mods.Kronox
 
             String results = "";
 
-            if (warps.Count < 1)
+            if (warps.IsEmpty())
             {
                 user.Player.SendTemporaryError("No warps have been set yet!");
                 return;
             }
 
             user.Player.SendTemporaryMessage("Existing warps:");
-            foreach (KeyValuePair<string, Vector3> pair in warps)
+            bool first = true;
+            foreach (KeyValuePair<string, Dictionary<string, float>> pair in warps.warps)
             {
-                if (warps.Count > 1 && results.Length > 0) results += ", ";
+                if (!first) results += ", ";
                 results += pair.Key;
+                first = false;
             }
             user.Player.SendTemporaryMessage(results);
         }
@@ -116,10 +139,8 @@ namespace Eco.Mods.Kronox
         {
             Initialize();
 
-            if (homes.ContainsKey(user.Player.ID))
-                homes.Remove(user.Player.ID);
-            homes.Add(user.Player.ID, user.Player.Position);
-            FileHelper.SaveToFile(homes.ToDictionary(item => item.Key.ToString(), item => item.Value), "homes.txt");
+            homes.Add(user.SteamId, user.Player.Position);
+            ClassSerializer<Homes>.Serialize(filePath, "homes.json", homes);
             user.Player.SendTemporaryMessage("Your home has been successfully set to '" + user.Player.Position + "'!");
         }
 
@@ -128,12 +149,27 @@ namespace Eco.Mods.Kronox
         {
             Initialize();
 
-            if (!homes.ContainsKey(user.Player.ID))
+            if(oldHomes.ContainsKey(user.Player.ID))
             {
-                user.Player.SendTemporaryError("Your home wasn't set yet!");
+                if (!homes.Exists(user.SteamId))
+                {
+                    homes.Add(user.SteamId, oldHomes[user.Player.ID]);
+                    ClassSerializer<Homes>.Serialize(filePath, "homes.json", homes);
+                }
+
+                oldHomes.Remove(user.Player.ID);
+                OldFileHelper.SaveToFile(oldHomes.ToDictionary(item => item.Key.ToString(), item => item.Value), filePath, "homes.txt");
+
+                if (oldHomes.Count <= 0)
+                    File.Delete(filePath + "homes.txt");
+            }
+
+            if (!homes.Exists(user.SteamId))
+            {
+                user.Player.SendTemporaryError("Your home wasn't set yet!"+user.Player.ID);
                 return;
             }
-            user.Player.SetPosition(homes[user.Player.ID]);
+            user.Player.SetPosition(homes.Get(user.SteamId));
             user.Player.SendTemporaryMessage("Returning to 'home'...");
         }
 
@@ -151,12 +187,98 @@ namespace Eco.Mods.Kronox
         }
     }
 
-
-    public static class FileHelper
+    public class Warps
     {
-        private static string filePath = "Mods/Kronox/AdvancedTeleportation/";
+        public Dictionary<string, Dictionary<string, float>> warps = new Dictionary<string, Dictionary<string, float>>();
 
-        public static void SaveToFile(Dictionary<string, Vector3> dic, string fileName)
+        public Warps()
+        {
+
+        }
+
+        public void Add(string name, Vector3 pos)
+        {
+            if (this.Exists(name))
+                warps.Remove(name);
+
+            Dictionary<string, float> sPos = new Dictionary<string, float>();
+            sPos.Add("x", pos.X);
+            sPos.Add("y", pos.Y);
+            sPos.Add("z", pos.Z);
+
+            warps.Add(name, sPos);
+        }
+
+        public void Remove(string name)
+        {
+            warps.Remove(name);
+        }
+
+        public Vector3 Get(string name)
+        {
+            return new Vector3(warps[name]["x"], warps[name]["y"], warps[name]["z"]);
+        }
+
+        public bool Exists(string name)
+        {
+            return warps.ContainsKey(name);
+        }
+
+        public bool IsEmpty()
+        {
+            return warps.Count <= 0;
+        }
+    }
+
+
+    public class Homes
+    {
+        public Dictionary<string, Dictionary<string, float>> homes = new Dictionary<string, Dictionary<string, float>>();
+
+        public Homes()
+        {
+
+        }
+
+        public void Add(string name, Vector3 pos)
+        {
+            if (this.Exists(name))
+                homes.Remove(name);
+
+            Dictionary<string, float> sPos = new Dictionary<string, float>();
+            sPos.Add("x", pos.X);
+            sPos.Add("y", pos.Y);
+            sPos.Add("z", pos.Z);
+
+            homes.Add(name, sPos);
+        }
+
+        public void Remove(string name)
+        {
+            homes.Remove(name);
+        }
+
+        public Vector3 Get(string name)
+        {
+            return new Vector3(homes[name]["x"], homes[name]["y"], homes[name]["z"]);
+        }
+
+        public bool Exists(string name)
+        {
+            return homes.ContainsKey(name);
+        }
+
+        public bool IsEmpty()
+        {
+            return homes.Count <= 0;
+        }
+    }
+
+
+    public static class OldFileHelper
+    {
+
+        public static void SaveToFile(Dictionary<string, Vector3> dic, string filePath, string fileName)
         {
             if (dic.Count < 1)
                 return;
@@ -183,7 +305,7 @@ namespace Eco.Mods.Kronox
             }
         }
 
-        public static Dictionary<string, Vector3> ReadFromFile(string fileName)
+        public static Dictionary<string, Vector3> ReadFromFile(string filePath, string fileName)
         {
             Dictionary<string, Vector3> dic = new Dictionary<string, Vector3>();
 
