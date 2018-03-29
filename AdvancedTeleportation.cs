@@ -10,7 +10,7 @@
  * 
  * ------------------------------------
  * Created by Kronox on March 18, 2018
- * Version: 1.0.3
+ * Version: 1.0.4
  * ------------------------------------
  **/
 
@@ -74,7 +74,7 @@ namespace Eco.Mods.Kronox
 
             warps.Add(name, user.Player.Position);
             ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
-            user.Player.SendTemporaryMessage("Warp '" + name + "' has been sucessfully set to '" + user.Player.Position + "'!");
+            user.Player.SendTemporaryMessageAlreadyLocalized("Warp '" + name + "' has been sucessfully set to '" + user.Player.Position + "'!");
         }
 
         [ChatCommand("Removes an existing warp point", ChatAuthorizationLevel.Admin)]
@@ -86,12 +86,12 @@ namespace Eco.Mods.Kronox
 
             if (!warps.Exists(name))
             {
-                user.Player.SendTemporaryError("'" + name + "' isn't a known warp!");
+                user.Player.SendTemporaryErrorAlreadyLocalized("'" + name + "' isn't a known warp!");
                 return;
             }
             warps.Remove(name);
             ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
-            user.Player.SendTemporaryMessage("Warp '" + name + "' has been sucessfully removed!");
+            user.Player.SendTemporaryMessageAlreadyLocalized("Warp '" + name + "' has been sucessfully removed!");
         }
 
         [ChatCommand("Teleports you to a warp point", ChatAuthorizationLevel.User)]
@@ -103,11 +103,11 @@ namespace Eco.Mods.Kronox
 
             if (!warps.Exists(name))
             {
-                user.Player.SendTemporaryError("'" + name + "' isn't a known warp!");
+                user.Player.SendTemporaryErrorAlreadyLocalized("'" + name + "' isn't a known warp!");
                 return;
             }
             user.Player.SetPosition(warps.Get(name));
-            user.Player.SendTemporaryMessage("Warping to '" + name + "'...");
+            user.Player.SendTemporaryMessageAlreadyLocalized("Warping to '" + name + "'...");
         }
 
         [ChatCommand("Lists all existing warps", ChatAuthorizationLevel.User)]
@@ -119,11 +119,11 @@ namespace Eco.Mods.Kronox
 
             if (warps.IsEmpty())
             {
-                user.Player.SendTemporaryError("No warps have been set yet!");
+                user.Player.SendTemporaryErrorAlreadyLocalized("No warps have been set yet!");
                 return;
             }
 
-            user.Player.SendTemporaryMessage("Existing warps:");
+            user.Player.SendTemporaryMessageAlreadyLocalized("Existing warps:");
             bool first = true;
             foreach (KeyValuePair<string, Dictionary<string, float>> pair in warps.warps)
             {
@@ -131,7 +131,7 @@ namespace Eco.Mods.Kronox
                 results += pair.Key;
                 first = false;
             }
-            user.Player.SendTemporaryMessage(results);
+            user.Player.SendTemporaryMessageAlreadyLocalized(results);
         }
 
         [ChatCommand("Sets your personal home to your current position", ChatAuthorizationLevel.User)]
@@ -141,7 +141,7 @@ namespace Eco.Mods.Kronox
 
             homes.Add(user.SteamId, user.Player.Position);
             ClassSerializer<Homes>.Serialize(filePath, "homes.json", homes);
-            user.Player.SendTemporaryMessage("Your home has been successfully set to '" + user.Player.Position + "'!");
+            user.Player.SendTemporaryMessageAlreadyLocalized("Your home has been successfully set to '" + user.Player.Position + "'!");
         }
 
         [ChatCommand("Teleports you to your home", ChatAuthorizationLevel.User)]
@@ -166,11 +166,11 @@ namespace Eco.Mods.Kronox
 
             if (!homes.Exists(user.SteamId))
             {
-                user.Player.SendTemporaryError("Your home wasn't set yet!"+user.Player.ID);
+                user.Player.SendTemporaryErrorAlreadyLocalized("Your home wasn't set yet!");
                 return;
             }
             user.Player.SetPosition(homes.Get(user.SteamId));
-            user.Player.SendTemporaryMessage("Returning to 'home'...");
+            user.Player.SendTemporaryMessageAlreadyLocalized("Returning to 'home'...");
         }
 
         public static void CallWarpSign(Player player, String text)
