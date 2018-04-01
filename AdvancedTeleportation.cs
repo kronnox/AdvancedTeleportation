@@ -10,7 +10,7 @@
  * 
  * ------------------------------------
  * Created by Kronox on March 18, 2018
- * Version: 1.1.1
+ * Version: 1.2.1
  * ------------------------------------
  **/
 
@@ -22,6 +22,7 @@ namespace Eco.Mods.Kronox
     using System.Linq;
     using Eco.Gameplay.Players;
     using Eco.Gameplay.Systems.Chat;
+    using Eco.Mods.Kronox.config;
     using Eco.Mods.Kronox.util;
     using Eco.Shared.Math;
 
@@ -65,42 +66,139 @@ namespace Eco.Mods.Kronox
             }
         }
 
-        [ChatCommand("Sets a new warp point or overrides an existing one", ChatAuthorizationLevel.Admin)]
-        public static void SetWarp(User user, string name)
+        //-------------------------------
+        // ADVANCEDTELEPORTATION SECTION
+        //-------------------------------
+
+        [ChatCommand("advtp", "AdvancedTeleportation Base Command; usage: '/advtp help'", ChatAuthorizationLevel.Admin)]
+        public static void AdvtpCommand(User user, string arg0 = "")
         {
-            Initialize();
-
-            name = name.ToLower();
-
-            warps.Add(name, user.Player.Position);
-            ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
-            user.Player.SendTemporaryMessageAlreadyLocalized("Warp '" + name + "' has been sucessfully set to '" + user.Player.Position + "'!");
-        }
-
-        [ChatCommand("Removes an existing warp point", ChatAuthorizationLevel.Admin)]
-        public static void RemoveWarp(User user, string name)
-        {
-            Initialize();
-
-            name = name.ToLower();
-
-            if (!warps.Exists(name))
+            switch (arg0)
             {
-                user.Player.SendTemporaryErrorAlreadyLocalized("'" + name + "' isn't a known warp!");
-                return;
+                case "help":
+                    PrintHelp(user);
+                    break;
+                case "reloadconfig":
+                    ReloadConfig(user);
+                    break;
+                default:
+                    PrintHelp(user);
+                    break;
             }
-            warps.Remove(name);
-            ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
-            user.Player.SendTemporaryMessageAlreadyLocalized("Warp '" + name + "' has been sucessfully removed!");
         }
 
-        [ChatCommand("Teleports you to a warp point", ChatAuthorizationLevel.User)]
-        public static void Warp(User user, string name)
+        /**
+         * Prints AdvancedTeleportation help to the respective user
+         */
+        public static void PrintHelp(User user)
         {
+            //makeshift solution... TODO: Something more fancy
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--=[ AdvancedTeleportation Help ]=--</color></b>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp help</color> - <color=#DCDCDC>Shows help-page for AdvancedTeleportation</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp help</color> - <color=#DCDCDC>Shows help-page for all warp commands</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home help</color> - <color=#DCDCDC>Shows help-page for all home commands</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp reloadconfig</color> - <color=#DCDCDC>Reloads the configuration-file</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--------------=[ page  1/1 ]=--------------</color></b>", user, false);
+
+        }
+
+        public static void ReloadConfig(User user)
+        {
+            user.Player.SendTemporaryMessageAlreadyLocalized("Reloading AdvancedTeleportation config file...");
+            ConfigManager.Instance.LoadConfigFile();
+            user.Player.SendTemporaryMessageAlreadyLocalized("...Complete!");
+        }
+
+        //--------------
+        // WARP SECTION
+        //--------------
+
+        [ChatCommand("warp", "Warp Base Command; usage: '/warp help'", ChatAuthorizationLevel.User)]
+        public static void WarpCommand(User user, string arg0 = "", string arg1 = "")
+        {
+            arg0 = arg0.ToLower();
+            arg1 = arg1.ToLower();
+
             Initialize();
 
-            name = name.ToLower();
+            switch (arg0)
+            {
+                case "help":
+                    //Print Warp help-page
+                    PrintWarpHelp(user);
+                    break;
+                case "set":
+                    //Sets a new warp or overrides an existing one
+                    SetWarp(user, arg1);
+                    break;
+                case "tp":
+                    //Teleports the player to the respective warp point
+                    TeleportWarp(user, arg1);
+                    break;
+                case "remove":
+                    //Removes an existing warp
+                    RemoveWarp(user, arg1);
+                    break;
+                case "delete":
+                    //Removes an existing warp
+                    RemoveWarp(user, arg1);
+                    break;
+                case "list":
+                    //Lists all existing homes for the user
+                    ListWarps(user);
+                    break;
+                default:
+                    //Teleports the player to the respective warp point
+                    TeleportWarp(user, arg0);
+                    break;
+            }
+        }
 
+        [ChatCommand("setwarp", "Sets a new warp point or overrides an existing one", ChatAuthorizationLevel.Admin)]
+        public static void SetWarpCommand(User user, string name)
+        {
+            Initialize();
+            name = name.ToLower();
+            SetWarp(user, name);
+        }
+
+        [ChatCommand("removewarp", "Removes an existing warp point", ChatAuthorizationLevel.Admin)]
+        public static void RemoveWarpCommand(User user, string name)
+        {
+            Initialize();
+            name = name.ToLower();
+            RemoveWarp(user, name);
+        }
+
+        [ChatCommand("warps", "Lists all existing warps", ChatAuthorizationLevel.User)]
+        public static void WarpsCommand(User user)
+        {
+            Initialize();
+            ListWarps(user);
+        }
+
+        /**
+         * Prints Warp-Command help to the respective user
+         */
+        public static void PrintWarpHelp(User user)
+        {
+            //makeshift solution... TODO: Something more fancy
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--=[ AdvancedTeleportation - Warp Help ]=--</color></b>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp help</color> - <color=#DCDCDC>Shows help-page for AdvancedTeleportation</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp help</color> - <color=#DCDCDC>Shows help-page for all warp commands</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp <name></color> - <color=#DCDCDC>Teleports you to a warp point</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=red>/setwarp <name></color> - <color=#DCDCDC>Sets a new warp point or overrides an existing one</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=red>/warp remove,<name></color> - <color=#DCDCDC>Removes an existing warp point</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp list</color> - <color=#DCDCDC>Lists all existing warps</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>-----------------=[ page  1/1 ]=-----------------</color></b>", user, false);
+
+        }
+
+        /**
+         * Teleports a user to the respective war´p point
+         */
+        public static void TeleportWarp(User user, string name)
+        {
             if (!warps.Exists(name))
             {
                 user.Player.SendTemporaryErrorAlreadyLocalized("'" + name + "' isn't a known warp!");
@@ -110,12 +208,48 @@ namespace Eco.Mods.Kronox
             user.Player.SendTemporaryMessageAlreadyLocalized("Warping to '" + name + "'...");
         }
 
-        [ChatCommand("Lists all existing warps", ChatAuthorizationLevel.User)]
-        public static void Warps(User user)
+        /**
+        * Adds a new warp or overrides an exsting one
+        */
+        public static void SetWarp(User user, string name)
         {
-            Initialize();
+            if(!user.IsAdmin)
+            {
+                user.Player.SendTemporaryErrorAlreadyLocalized("You don't have the permission to do that! Rank needed: Admin");
+            }
 
-            String results = "";
+            warps.Add(name, user.Player.Position);
+            ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
+            user.Player.SendTemporaryMessageAlreadyLocalized("Warp '" + name + "' has been sucessfully set to '" + user.Player.Position + "'!");
+        }
+
+        /**
+         * Removes a warp point
+         */
+        public static void RemoveWarp(User user, string name)
+        {
+            if (!user.IsAdmin)
+            {
+                user.Player.SendTemporaryErrorAlreadyLocalized("You don't have the permission to do that! Rank needed: Admin");
+            }
+
+            if (!warps.Exists(name))
+            {
+                user.Player.SendTemporaryErrorAlreadyLocalized("'" + name + "' isn't a known warp!");
+                return;
+            }
+
+            warps.Remove(name);
+            ClassSerializer<Warps>.Serialize(filePath, "warps.json", warps);
+            user.Player.SendTemporaryMessageAlreadyLocalized("Warp '" + name + "' has been sucessfully removed!");
+        }
+
+        /**
+         * Prints all existing warps to the respective user
+         */
+        public static void ListWarps(User user)
+        {
+            string results = "";
 
             if (warps.IsEmpty())
             {
@@ -134,26 +268,86 @@ namespace Eco.Mods.Kronox
             user.Player.SendTemporaryMessageAlreadyLocalized(results);
         }
 
-        [ChatCommand("Sets your personal home to your current position", ChatAuthorizationLevel.User)]
-        public static void SetHome(User user)
-        {
-            Initialize();
+        //---------------
+        // HOMES SECTION
+        //---------------
 
-            homes.Add(user.SteamId, user.Player.Position);
-            ClassSerializer<Homes>.Serialize(filePath, "homes.json", homes);
-            user.Player.SendTemporaryMessageAlreadyLocalized("Your home has been successfully set to '" + user.Player.Position + "'!");
+        [ChatCommand("home", "Teleports you to your home", ChatAuthorizationLevel.User)]
+        public static void HomeCommand(User user, string arg0 = "", string arg1 = "")
+        {
+            arg0 = arg0.ToLower();
+            arg1 = arg1.ToLower();
+
+            Initialize();
+            ConvertHomes(user);
+
+            switch (arg0)
+            {
+                case "help":
+                    //Prints Home help-page
+                    PrintHomeHelp(user);
+                    break;
+                case "set":
+                    //Sets a new home or overrides an existing one
+                    SetHome(user, arg1);
+                    break;
+                case "tp":
+                    //Teleports the player to the respective home point
+                    TeleportHome(user, arg1);
+                    break;
+                case "remove":
+                    //Removes an existing home
+                    RemoveHome(user, arg1);
+                    break;
+                case "delete":
+                    //Removes an existing home
+                    RemoveHome(user, arg1);
+                    break;
+                case "list":
+                    //Lists all existing homes for the user
+                    ListHomes(user);
+                    break;
+                default:
+                    //Teleports the player to the respective home point
+                    TeleportHome(user, arg0);
+                    break;
+            }
         }
 
-        [ChatCommand("Teleports you to your home", ChatAuthorizationLevel.User)]
-        public static void Home(User user)
+        [ChatCommand("sethome", "Sets your personal home to your current position", ChatAuthorizationLevel.User)]
+        public static void SetHomeCommand(User user, string name = "")
         {
             Initialize();
+            name = name.ToLower();
+            SetHome(user, name);
+        }
 
-            if(oldHomes.ContainsKey(user.Player.ID))
+        /**
+         * Prints Warp-Command help to the respective user
+         */
+        public static void PrintHomeHelp(User user)
+        {
+            //makeshift solution... TODO: Something more fancy
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--=[ AdvancedTeleportation - Home Help ]=--</color></b>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp help</color> - <color=#DCDCDC>Shows help-page for AdvancedTeleportation</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home help</color> - <color=#DCDCDC>Shows help-page for all home commands</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home [name]</color> - <color=#DCDCDC>Teleports you to your home</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/sethome <name></color> - <color=#DCDCDC>Sets a new home or overrides an existing one</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home remove,<name></color> - <color=#DCDCDC>Removes an existing home</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home list</color> - <color=#DCDCDC>Lists all of your homes</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>-----------------=[ page  1/1 ]=-----------------</color></b>", user, false);
+        }
+
+        /**
+         *  Converts all old home points of the user to the new file system
+         */
+        public static void ConvertHomes(User user)
+        {
+            if (oldHomes.ContainsKey(user.Player.ID))
             {
-                if (!homes.Exists(user.SteamId))
+                if (!homes.Exists(user.SlgId))
                 {
-                    homes.Add(user.SteamId, oldHomes[user.Player.ID]);
+                    homes.Add(user.SlgId, oldHomes[user.Player.ID]);
                     ClassSerializer<Homes>.Serialize(filePath, "homes.json", homes);
                 }
 
@@ -163,15 +357,125 @@ namespace Eco.Mods.Kronox
                 if (oldHomes.Count <= 0)
                     File.Delete(filePath + "homes.txt");
             }
+        }
 
-            if (!homes.Exists(user.SteamId))
+        /**
+         *  Teleports the player to the respective home point
+         *  # default home: name = "home"
+         */
+        public static void TeleportHome(User user, string id)
+        {
+            string name = "home";
+            if (id.Equals("home"))
+                id = "";
+            if (!id.Equals(""))
             {
-                user.Player.SendTemporaryErrorAlreadyLocalized("Your home wasn't set yet!");
+                name = id;
+                id = "-" + id;
+            }
+
+            //home not found
+            if (!homes.Exists(user.SlgId + id))
+            {
+                user.Player.SendTemporaryErrorAlreadyLocalized("This home wasn't set yet!");
                 return;
             }
-            user.Player.SetPosition(homes.Get(user.SteamId));
-            user.Player.SendTemporaryMessageAlreadyLocalized("Returning to 'home'...");
+
+            //teleportation
+            user.Player.SetPosition(homes.Get(user.SlgId + id));
+            user.Player.SendTemporaryMessageAlreadyLocalized("Returning to '" + name + "'...");
         }
+
+        /**
+         *  Sets the home point '@name' for the respective user
+         *  # default home: name = "home"
+         */
+        public static void SetHome(User user, string id)
+        {
+            if(!user.IsAdmin && !ConfigManager.Instance.GetInt("home-limit").Equals(-1) && homes.GetHomesForSLGID(user.SlgId).Count >= ConfigManager.Instance.GetInt("home-limit"))
+            {
+                user.Player.SendTemporaryErrorAlreadyLocalized("You have reached the limit of '" + ConfigManager.Instance.GetInt("home-limit") + "' homes! Delete one first ('/home remove,<name>').");
+                return;
+            }
+
+            string name = "home";
+            if (id.Equals("home"))
+                id = "";
+            if (!id.Equals(""))
+            {
+                name = id;
+                id = "-" + id;
+            }
+
+            homes.Add(user.SlgId + id, user.Player.Position);
+            ClassSerializer<Homes>.Serialize(filePath, "homes.json", homes);
+            user.Player.SendTemporaryMessageAlreadyLocalized("Your home '" + name + "' has been successfully set to '" + user.Player.Position + "'!");
+        }
+
+        /**
+         *  Removes the home point '@name' for the respective user
+         *  # default home: name = "home"
+         */
+        public static void RemoveHome(User user, string id)
+        {
+            string name = "home";
+            if (id.Equals("home"))
+                id = "";
+            if (!id.Equals(""))
+            {
+                name = id;
+                id = "-" + id;
+            }
+
+            //home not found
+            if (!homes.Exists(user.SlgId + id))
+            {
+                user.Player.SendTemporaryErrorAlreadyLocalized("This home wasn't set yet!");
+                return;
+            }
+
+            homes.Remove(user.SlgId + id);
+            ClassSerializer<Homes>.Serialize(filePath, "homes.json", homes);
+            user.Player.SendTemporaryMessageAlreadyLocalized("Your home '" + name + "' has been successfully removed!");
+        }
+
+        /**
+         *  Lists all existing homepoints for the user
+         */
+        public static void ListHomes(User user)
+        {
+            Dictionary<string, Dictionary<string, float>> userHomes = homes.GetHomesForSLGID(user.SlgId);
+
+            //no homes set yet
+            if (userHomes.Count < 1)
+            {
+                user.Player.SendTemporaryErrorAlreadyLocalized("You haven't set any homes yet!");
+                return;
+            }
+
+            //list header
+            user.Player.SendTemporaryMessageAlreadyLocalized(user.Name + "'s homes:");
+
+            //list body
+            string results = "";
+            bool first = true;
+            foreach (KeyValuePair<string, Dictionary<string, float>> pair in userHomes)
+            {
+                if (!first) results += ", ";
+
+                if (pair.Key.Equals(user.SlgId))
+                    results += "home";
+                else
+                    results += pair.Key.Replace(user.SlgId + "-", "");
+
+                first = false;
+            }
+            user.Player.SendTemporaryMessageAlreadyLocalized(results);
+        }
+
+        //-------------------
+        // WARP SIGN SECTION
+        //-------------------
 
         public static void CallWarpSign(Player player, String text)
         {
@@ -183,7 +487,7 @@ namespace Eco.Mods.Kronox
             if (lines.Length < 2 || !lines[0].Equals("[WARP]") || lines[1].Contains(' '))
                 return;
 
-            Eco.Mods.Kronox.AdvancedTeleportation.Warp(player.User, lines[1]);
+            Eco.Mods.Kronox.AdvancedTeleportation.TeleportWarp(player.User, lines[1]);
         }
     }
 
@@ -271,6 +575,11 @@ namespace Eco.Mods.Kronox
         public bool IsEmpty()
         {
             return homes.Count <= 0;
+        }
+
+        public Dictionary<string, Dictionary<string, float>> GetHomesForSLGID(string id)
+        {
+            return homes.Where(x => x.Key.StartsWith(id)).ToDictionary(x => x.Key, x => x.Value);
         }
     }
 
