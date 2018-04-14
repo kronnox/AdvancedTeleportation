@@ -15,7 +15,7 @@
 
 using Asphalt.Api.Util;
 
-namespace Eco.Mods.Kronox.config
+namespace AdvancedTeleportation.config
 {
     class ConfigManager
     {

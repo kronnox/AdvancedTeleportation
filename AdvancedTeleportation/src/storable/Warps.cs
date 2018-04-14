@@ -9,28 +9,56 @@
  * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
  * ------------------------------------
- * Created by Kronox on March 28, 2018
+ * Created by Kronox on April 14, 2018
  * ------------------------------------
  **/
 
+using Eco.Shared.Math;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace AdvancedTeleportation.config
+namespace AdvancedTeleportation.storable
 {
-    public class AdvancedTeleportationConfig
+    public class Warps
     {
-        public Dictionary<string, object> configValues = new Dictionary<string, object>();
+        public Dictionary<string, Dictionary<string, float>> warps = new Dictionary<string, Dictionary<string, float>>();
 
-        public AdvancedTeleportationConfig() {}
-
-        public Dictionary<string, object> GetConfigValues()
+        public Warps()
         {
-            return this.configValues;
+
         }
 
-        public void SetConfigValues(Dictionary<string, object> input)
+        public void Add(string name, Vector3 pos)
         {
-            this.configValues = input;
+            if (this.Exists(name))
+                warps.Remove(name);
+
+            Dictionary<string, float> sPos = new Dictionary<string, float>();
+            sPos.Add("x", pos.X);
+            sPos.Add("y", pos.Y);
+            sPos.Add("z", pos.Z);
+
+            warps.Add(name, sPos);
+        }
+
+        public void Remove(string name)
+        {
+            warps.Remove(name);
+        }
+
+        public Vector3 Get(string name)
+        {
+            return new Vector3(warps[name]["x"], warps[name]["y"], warps[name]["z"]);
+        }
+
+        public bool Exists(string name)
+        {
+            return warps.ContainsKey(name);
+        }
+
+        public bool IsEmpty()
+        {
+            return warps.Count <= 0;
         }
     }
 }

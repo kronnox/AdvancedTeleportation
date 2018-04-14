@@ -13,23 +13,31 @@
  * ------------------------------------
  **/
 
+using AdvancedTeleportation.command;
 using Asphalt.Api.Event;
 using Asphalt.Api.Event.PlayerEvents;
 using Eco.Gameplay.Components;
 using Eco.Mods.TechTree;
 using Eco.Shared.Items;
 
-namespace Eco.Mods.Kronox
+namespace AdvancedTeleportation
 {
     public class AdvTpEventListener
     {
         [EventHandler]
         public void OnPlayerTeleport(PlayerTeleportEvent evt)
         {
-            if (AdvancedTeleportation.BackPos.ContainsKey(evt.Player.User.SlgId))
-                AdvancedTeleportation.BackPos.Remove(evt.Player.User.SlgId);
+            if (AdvancedTeleportationPlugin.BackPos.ContainsKey(evt.Player.User.SlgId))
+                AdvancedTeleportationPlugin.BackPos.Remove(evt.Player.User.SlgId);
 
-            AdvancedTeleportation.BackPos.Add(evt.Player.User.SlgId, evt.Player.Position);
+            AdvancedTeleportationPlugin.BackPos.Add(evt.Player.User.SlgId, evt.Player.Position);
+        }
+
+        [EventHandler]
+        public void OnPlayerLogout(PlayerLogoutEvent evt)
+        {
+            if (AdvancedTeleportationPlugin.BackPos.ContainsKey(evt.User.SlgId))
+                AdvancedTeleportationPlugin.BackPos.Remove(evt.User.SlgId);
         }
 
         [EventHandler]
@@ -38,7 +46,7 @@ namespace Eco.Mods.Kronox
             if (!evt.Context.HasTarget)
                 return;
 
-            if (!evt.Context.Target.GetType().IsSubclassOf(typeof(WoodSignObject)))
+            if (!typeof(WoodSignObject).IsAssignableFrom(evt.Context.Target.GetType()))
                 return;
 
             if (!evt.Context.Method.Equals(InteractionMethod.Right))
@@ -46,7 +54,7 @@ namespace Eco.Mods.Kronox
 
             WoodSignObject sign = (WoodSignObject)evt.Context.Target;
 
-            AdvancedTeleportation.CallWarpSign(evt.Context.Player, sign.GetComponent<CustomTextComponent>().Text);
+            WarpCommands.CallWarpSign(evt.Context.Player, sign.GetComponent<CustomTextComponent>().Text);
         }
     }
 }

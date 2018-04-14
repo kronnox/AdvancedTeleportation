@@ -9,28 +9,61 @@
  * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
  * ------------------------------------
- * Created by Kronox on March 28, 2018
+ * Created by Kronox on April 14, 2018
  * ------------------------------------
  **/
 
+using Eco.Shared.Math;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace AdvancedTeleportation.config
+namespace AdvancedTeleportation.storable
 {
-    public class AdvancedTeleportationConfig
+    public class Homes
     {
-        public Dictionary<string, object> configValues = new Dictionary<string, object>();
+        public Dictionary<string, Dictionary<string, float>> homes = new Dictionary<string, Dictionary<string, float>>();
 
-        public AdvancedTeleportationConfig() {}
-
-        public Dictionary<string, object> GetConfigValues()
+        public Homes()
         {
-            return this.configValues;
+
         }
 
-        public void SetConfigValues(Dictionary<string, object> input)
+        public void Add(string name, Vector3 pos)
         {
-            this.configValues = input;
+            if (this.Exists(name))
+                homes.Remove(name);
+
+            Dictionary<string, float> sPos = new Dictionary<string, float>();
+            sPos.Add("x", pos.X);
+            sPos.Add("y", pos.Y);
+            sPos.Add("z", pos.Z);
+
+            homes.Add(name, sPos);
+        }
+
+        public void Remove(string name)
+        {
+            homes.Remove(name);
+        }
+
+        public Vector3 Get(string name)
+        {
+            return new Vector3(homes[name]["x"], homes[name]["y"], homes[name]["z"]);
+        }
+
+        public bool Exists(string name)
+        {
+            return homes.ContainsKey(name);
+        }
+
+        public bool IsEmpty()
+        {
+            return homes.Count <= 0;
+        }
+
+        public Dictionary<string, Dictionary<string, float>> GetHomesForSLGID(string id)
+        {
+            return homes.Where(x => x.Key.StartsWith(id)).ToDictionary(x => x.Key, x => x.Value);
         }
     }
 }

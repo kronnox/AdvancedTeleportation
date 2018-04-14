@@ -9,28 +9,52 @@
  * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
  * ------------------------------------
- * Created by Kronox on March 28, 2018
+ * Created by Kronox on March 18, 2018
+ * Version: 1.3.1
  * ------------------------------------
  **/
 
 using System.Collections.Generic;
+using AdvancedTeleportation.storable;
+using Asphalt.Api.Event;
+using Asphalt.Api.Util;
+using Eco.Core.Plugins.Interfaces;
+using Eco.Shared.Math;
 
-namespace AdvancedTeleportation.config
+namespace AdvancedTeleportation
 {
-    public class AdvancedTeleportationConfig
+    public class AdvancedTeleportationPlugin : IModKitPlugin, IServerPlugin
     {
-        public Dictionary<string, object> configValues = new Dictionary<string, object>();
 
-        public AdvancedTeleportationConfig() {}
+        public static bool IsInitialized { get; protected set; }
 
-        public Dictionary<string, object> GetConfigValues()
+        public static readonly string filePath = "Mods/AdvancedTeleportation/save/";
+
+        public static Warps Warps { get; set; }
+        public static Homes Homes { get; set; }
+
+        public static Dictionary<string, Vector3> BackPos { get; set; }
+
+        static AdvancedTeleportationPlugin()
         {
-            return this.configValues;
+            Warps = ClassSerializer<Warps>.Deserialize(filePath, "warps.json");
+            Homes = ClassSerializer<Homes>.Deserialize(filePath, "homes.json");
+
+            BackPos = new Dictionary<string, Vector3>();
+
+            EventManager.RegisterListener(new AdvTpEventListener());
+
+            IsInitialized = true;
         }
 
-        public void SetConfigValues(Dictionary<string, object> input)
+        public string GetStatus()
         {
-            this.configValues = input;
+            return IsInitialized ? "Complete!" : "Initializing...";
+        }
+
+        public override string ToString()
+        {
+            return "AdvancedTeleportation";
         }
     }
 }
