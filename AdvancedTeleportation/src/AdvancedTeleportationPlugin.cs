@@ -14,19 +14,21 @@
  * ------------------------------------
  **/
 
+using System;
 using System.Collections.Generic;
+using AdvancedTeleportation.Settings;
 using AdvancedTeleportation.storable;
+using Asphalt;
 using Asphalt.Api.Event;
 using Asphalt.Api.Util;
-using Eco.Core.Plugins.Interfaces;
+using Asphalt.Service.Permissions;
 using Eco.Shared.Math;
 
 namespace AdvancedTeleportation
 {
-    public class AdvancedTeleportationPlugin : IModKitPlugin, IServerPlugin
+    public class AdvancedTeleportationPlugin : AsphaltMod
     {
-
-        public static bool IsInitialized { get; protected set; }
+        public static AsphaltMod Mod { get; private set; }
 
         public static readonly string filePath = "Mods/AdvancedTeleportation/save/";
 
@@ -35,26 +37,52 @@ namespace AdvancedTeleportation
 
         public static Dictionary<string, Vector3> BackPos { get; set; }
 
-        static AdvancedTeleportationPlugin()
+        public override void OnEnable()
         {
+            Mod = this;
+
             Warps = ClassSerializer<Warps>.Deserialize(filePath, "warps.json");
             Homes = ClassSerializer<Homes>.Deserialize(filePath, "homes.json");
 
             BackPos = new Dictionary<string, Vector3>();
 
             EventManager.RegisterListener(new AdvTpEventListener());
-
-            IsInitialized = true;
-        }
-
-        public string GetStatus()
-        {
-            return IsInitialized ? "Complete!" : "Initializing...";
         }
 
         public override string ToString()
         {
             return "AdvancedTeleportation";
+        }
+
+        public override List<Type> GetCustomSettings()
+        {
+            return new List<Type>()
+            {
+                typeof(TpSettings)
+            };
+        }
+
+        public override List<Permission> GetPermissions()
+        {
+            return new List<Permission>()
+            {
+                new Permission("advtp.help", PermissionGroup.User),
+                new Permission("advtp.reloadconfig", PermissionGroup.Admin),
+                new Permission("advtp.reloadpermissions", PermissionGroup.Admin),
+                new Permission("back", PermissionGroup.User),
+                new Permission("warp.help", PermissionGroup.User),
+                new Permission("warp.set", PermissionGroup.Admin),
+                new Permission("warp.remove", PermissionGroup.Admin),
+                new Permission("warp.teleport.cmd", PermissionGroup.User),
+                new Permission("warp.teleport.sign", PermissionGroup.User),
+                new Permission("warp.list", PermissionGroup.User),
+                new Permission("home.help", PermissionGroup.User),
+                new Permission("home.set", PermissionGroup.User),
+                new Permission("home.remove", PermissionGroup.User),
+                new Permission("home.teleport", PermissionGroup.User),
+                new Permission("home.list", PermissionGroup.User),
+                new Permission("home.setlimit", PermissionGroup.Admin)
+            };
         }
     }
 }

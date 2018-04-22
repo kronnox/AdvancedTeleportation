@@ -43,6 +43,9 @@ namespace AdvancedTeleportation.command
                     SetWarp(user, arg1);
                     break;
                 case "tp":
+                    if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(user, "warp.teleport.cmd"))
+                        return;
+
                     //Teleports the player to the respective warp point
                     TeleportWarp(user, arg1);
                     break;
@@ -90,14 +93,23 @@ namespace AdvancedTeleportation.command
          */
         public static void PrintWarpHelp(User user)
         {
+            if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(user, "warp.help"))
+                return;
+
             //makeshift solution... TODO: Something more fancy
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--=[ HomeCommands - Warp Help ]=--</color></b>", user, false);
-            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp help</color> - <color=#DCDCDC>Shows help-page for HomeCommands</color>", user, false);
-            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp help</color> - <color=#DCDCDC>Shows help-page for all warp commands</color>", user, false);
-            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp <name></color> - <color=#DCDCDC>Teleports you to a warp point</color>", user, false);
-            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=red>/setwarp <name></color> - <color=#DCDCDC>Sets a new warp point or overrides an existing one</color>", user, false);
-            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=red>/warp remove,<name></color> - <color=#DCDCDC>Removes an existing warp point</color>", user, false);
-            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp list</color> - <color=#DCDCDC>Lists all existing warps</color>", user, false);
+            if(AdvancedTeleportationPlugin.Mod.GetPermissionsService().HasPermission(user, "advtp.help"))
+                ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp help</color> - <color=#DCDCDC>Shows help-page for Advanced Teleportation Commands</color>", user, false);
+            if (AdvancedTeleportationPlugin.Mod.GetPermissionsService().HasPermission(user, "warp.help"))
+                ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp help</color> - <color=#DCDCDC>Shows help-page for all warp commands</color>", user, false);
+            if (AdvancedTeleportationPlugin.Mod.GetPermissionsService().HasPermission(user, "warp.teleprt.cmd"))
+                ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp <name></color> - <color=#DCDCDC>Teleports you to a warp point</color>", user, false);
+            if (AdvancedTeleportationPlugin.Mod.GetPermissionsService().HasPermission(user, "warp.set"))
+                ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/setwarp <name></color> - <color=#DCDCDC>Sets a new warp point or overrides an existing one</color>", user, false);
+            if (AdvancedTeleportationPlugin.Mod.GetPermissionsService().HasPermission(user, "warp.remove"))
+                ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp remove,<name></color> - <color=#DCDCDC>Removes an existing warp point</color>", user, false);
+            if (AdvancedTeleportationPlugin.Mod.GetPermissionsService().HasPermission(user, "warp.list"))
+                ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp list</color> - <color=#DCDCDC>Lists all existing warps</color>", user, false);
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>-----------------=[ page  1/1 ]=-----------------</color></b>", user, false);
 
         }
@@ -121,10 +133,8 @@ namespace AdvancedTeleportation.command
         */
         public static void SetWarp(User user, string name)
         {
-            if (!user.IsAdmin)
-            {
-                user.Player.SendTemporaryErrorAlreadyLocalized("You don't have the permission to do that! Rank needed: Admin");
-            }
+            if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(user, "warp.set"))
+                return;
 
             AdvancedTeleportationPlugin.Warps.Add(name, user.Player.Position);
             ClassSerializer<Warps>.Serialize(AdvancedTeleportationPlugin.filePath, "warps.json", AdvancedTeleportationPlugin.Warps);
@@ -136,10 +146,8 @@ namespace AdvancedTeleportation.command
          */
         public static void RemoveWarp(User user, string name)
         {
-            if (!user.IsAdmin)
-            {
-                user.Player.SendTemporaryErrorAlreadyLocalized("You don't have the permission to do that! Rank needed: Admin");
-            }
+            if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(user, "warp.remove"))
+                return;
 
             if (!AdvancedTeleportationPlugin.Warps.Exists(name))
             {
@@ -157,6 +165,9 @@ namespace AdvancedTeleportation.command
          */
         public static void ListWarps(User user)
         {
+            if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(user, "warp.list"))
+                return;
+
             string results = "";
 
             if (AdvancedTeleportationPlugin.Warps.IsEmpty())
@@ -182,6 +193,9 @@ namespace AdvancedTeleportation.command
 
         public static void CallWarpSign(Player player, String text)
         {
+            if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(player.User, "warp.teleport.sign"))
+                return;
+
             if (string.IsNullOrWhiteSpace(text))
                 return;
 

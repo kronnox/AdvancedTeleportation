@@ -15,7 +15,6 @@
 
 namespace AdvancedTeleportation.command
 {
-    using AdvancedTeleportation.config;
     using Eco.Gameplay.Players;
     using Eco.Gameplay.Systems.Chat;
     using Eco.Shared.Math;
@@ -31,8 +30,8 @@ namespace AdvancedTeleportation.command
                 case "help":
                     PrintHelp(user);
                     break;
-                case "reloadconfig":
-                    ReloadConfig(user);
+                case "reloadsettings":
+                    ReloadSettings(user);
                     break;
                 default:
                     PrintHelp(user);
@@ -43,6 +42,9 @@ namespace AdvancedTeleportation.command
         [ChatCommand("back", "Teleports you back to your last location before you got teleported.", ChatAuthorizationLevel.Admin)]
         public static void BackCommand(User user)
         {
+            if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(user, "back"))
+                return;
+
             if (!AdvancedTeleportationPlugin.BackPos.ContainsKey(user.SlgId))
             {
                 user.Player.SendTemporaryErrorAlreadyLocalized("You haven't been teleported yet since the last server restart...");
@@ -56,25 +58,31 @@ namespace AdvancedTeleportation.command
         }
 
         /**
-         * Prints HomeCommands help to the respective user
+         * Prints AdvTp help to the respective user
          */
         public static void PrintHelp(User user)
         {
+            if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(user, "advtp.help"))
+                return;
+
             //makeshift solution... TODO: Something more fancy
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--=[ AdvancedTeleportation Help ]=--</color></b>", user, false);
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp help</color> - <color=#DCDCDC>Shows help-page for HomeCommands</color>", user, false);
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp help</color> - <color=#DCDCDC>Shows help-page for all warp commands</color>", user, false);
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home help</color> - <color=#DCDCDC>Shows help-page for all home commands</color>", user, false);
-            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp reloadconfig</color> - <color=#DCDCDC>Reloads the configuration-file</color>", user, false);
+            ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp reloadsettings</color> - <color=#DCDCDC>Reloads all settings-files</color>", user, false);
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/back</color> - <color=#DCDCDC>Teleports you back to your last location before you got teleported</color>", user, false);
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--------------=[ page  1/1 ]=--------------</color></b>", user, false);
 
         }
 
-        public static void ReloadConfig(User user)
+        public static void ReloadSettings(User user)
         {
-            user.Player.SendTemporaryMessageAlreadyLocalized("Reloading HomeCommands config file...");
-            ConfigManager.Instance.LoadConfigFile();
+            if (!AdvancedTeleportationPlugin.Mod.GetPermissionsService().CheckPermission(user, "advtp.reloadconfig"))
+                return;
+
+            user.Player.SendTemporaryMessageAlreadyLocalized("Reloading settings files...");
+            AdvancedTeleportationPlugin.Mod.GetSettingsService().Reload();
             user.Player.SendTemporaryMessageAlreadyLocalized("...Complete!");
         }
     }
