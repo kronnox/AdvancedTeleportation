@@ -10,39 +10,71 @@
  * 
  * ------------------------------------
  * Created by Kronox on March 18, 2018
- * Version: 1.3.1
+ * Version: 2.0.0
  * ------------------------------------
  **/
 
-using System;
 using System.Collections.Generic;
-using AdvancedTeleportation.Settings;
+using System.IO;
 using AdvancedTeleportation.storable;
 using Asphalt;
 using Asphalt.Api.Event;
 using Asphalt.Api.Util;
+using Asphalt.Service;
 using Asphalt.Service.Permissions;
+using Asphalt.Storeable;
+using Eco.Core.Plugins.Interfaces;
 using Eco.Shared.Math;
+using Eco.Shared.Utils;
 
 namespace AdvancedTeleportation
 {
-    public class AdvancedTeleportationPlugin : AsphaltMod
+    [AsphaltPlugin]
+    public class AdvancedTeleportationPlugin : IModKitPlugin, IDisableable
     {
-        public static AsphaltMod Mod { get; private set; }
+        public static AdvancedTeleportationPlugin Instance;
 
-        public static readonly string filePath = "Mods/AdvancedTeleportation/save/";
+        private bool disabled;
+        public static string VERSION = "v.2.0.0";
 
-        public static Warps Warps { get; set; }
-        public static Homes Homes { get; set; }
+        [Inject]
+        public IPermissionService PermissionService { get; set; }
 
-        public static Dictionary<string, Vector3> BackPos { get; set; }
+        [Inject]
+        [DefaultValues(nameof(GetDefaultUserSettings))]
+        [StorageLocation("user_settings")]
+        public IUserStorageCollection UserSettings { get; set; }
 
-        public override void OnEnable()
+        [Inject]
+        [StorageLocation("storage/warps")]
+        public IStorage WarpsStorage { get; set; }
+
+        [Inject]
+        [StorageLocation("storage/homes/")]
+        public IUserStorageCollection HomesStorage { get; set; }
+
+        public Warps OldWarpsStorage { get; set; }
+        public Homes OldHomesStorage { get; set; }
+
+        public Dictionary<string, Vector3> BackPos { get; set; }
+
+        /**
+        public void OnPreEnable()
         {
-            Mod = this;
+            if (PluginManager.Obj.GetPlugin<Asphalt.Api.Asphalt>() == null)
+                Disable("Dependency 'Asphalt-MDK' not found!");
+        }
+        **/
 
-            Warps = ClassSerializer<Warps>.Deserialize(filePath, "warps.json");
-            Homes = ClassSerializer<Homes>.Deserialize(filePath, "homes.json");
+        public void OnEnable()
+        {
+            Instance = this;
+
+            if (IsDisabled())
+                return;
+
+            OldWarpsStorage = ClassSerializer<Warps>.Deserialize(Path.Combine(ServiceHelper.GetServerPluginFolder(this), "storage", "old_warps.json"));
+            OldHomesStorage = ClassSerializer<Homes>.Deserialize(Path.Combine(ServiceHelper.GetServerPluginFolder(this), "storage", "old_homes.json"));
 
             BackPos = new Dictionary<string, Vector3>();
 
@@ -54,35 +86,57 @@ namespace AdvancedTeleportation
             return "AdvancedTeleportation";
         }
 
-        public override List<Type> GetCustomSettings()
+        public KeyDefaultValue[] GetDefaultUserSettings()
         {
-            return new List<Type>()
+            return new KeyDefaultValue[]
             {
-                typeof(TpSettings)
+                new KeyDefaultValue("home-limit", 5)
             };
         }
 
-        public override List<Permission> GetPermissions()
+        [Inject]
+        public DefaultPermission[] GetDefaultPermissions()
         {
-            return new List<Permission>()
+            return new DefaultPermission[]
             {
-                new Permission("advtp.help", PermissionGroup.User),
-                new Permission("advtp.reloadconfig", PermissionGroup.Admin),
-                new Permission("advtp.reloadpermissions", PermissionGroup.Admin),
-                new Permission("back", PermissionGroup.User),
-                new Permission("warp.help", PermissionGroup.User),
-                new Permission("warp.set", PermissionGroup.Admin),
-                new Permission("warp.remove", PermissionGroup.Admin),
-                new Permission("warp.teleport.cmd", PermissionGroup.User),
-                new Permission("warp.teleport.sign", PermissionGroup.User),
-                new Permission("warp.list", PermissionGroup.User),
-                new Permission("home.help", PermissionGroup.User),
-                new Permission("home.set", PermissionGroup.User),
-                new Permission("home.remove", PermissionGroup.User),
-                new Permission("home.teleport", PermissionGroup.User),
-                new Permission("home.list", PermissionGroup.User),
-                new Permission("home.setlimit", PermissionGroup.Admin)
+                new DefaultPermission("advtp.help", PermissionGroup.User),
+                new DefaultPermission("advtp.reload", PermissionGroup.Admin),
+                new DefaultPermission("back", PermissionGroup.User),
+                new DefaultPermission("warp.help", PermissionGroup.User),
+                new DefaultPermission("warp.set", PermissionGroup.Admin),
+                new DefaultPermission("warp.remove", PermissionGroup.Admin),
+                new DefaultPermission("warp.teleport.cmd", PermissionGroup.User),
+                new DefaultPermission("warp.teleport.sign", PermissionGroup.User),
+                new DefaultPermission("warp.list", PermissionGroup.User),
+                new DefaultPermission("home.help", PermissionGroup.User),
+                new DefaultPermission("home.set", PermissionGroup.User),
+                new DefaultPermission("home.remove", PermissionGroup.User),
+                new DefaultPermission("home.teleport", PermissionGroup.User),
+                new DefaultPermission("home.list", PermissionGroup.User),
+                new DefaultPermission("home.setlimit", PermissionGroup.Admin),
+                new DefaultPermission("home.ignorelimit", PermissionGroup.Admin)
             };
+        }
+
+        public string GetStatus()
+        {
+            return $"[{VERSION}] Running...";
+        }
+
+        public void Disable(string reason)
+        {
+            Log.WriteError($"Disabling {this.ToString()}...\nReason: {reason}");
+            SetDisabled(true);
+        }
+
+        public void SetDisabled(bool disabled)
+        {
+            this.disabled = disabled;
+        }
+
+        public bool IsDisabled()
+        {
+            return disabled;
         }
     }
 }

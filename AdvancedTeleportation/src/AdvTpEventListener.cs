@@ -27,17 +27,17 @@ namespace AdvancedTeleportation
         [EventHandler]
         public void OnPlayerTeleport(PlayerTeleportEvent evt)
         {
-            if (AdvancedTeleportationPlugin.BackPos.ContainsKey(evt.Player.User.SlgId))
-                AdvancedTeleportationPlugin.BackPos.Remove(evt.Player.User.SlgId);
+            if (AdvancedTeleportationPlugin.Instance.BackPos.ContainsKey(evt.Player.User.SlgId))
+                AdvancedTeleportationPlugin.Instance.BackPos.Remove(evt.Player.User.SlgId);
 
-            AdvancedTeleportationPlugin.BackPos.Add(evt.Player.User.SlgId, evt.Player.Position);
+            AdvancedTeleportationPlugin.Instance.BackPos.Add(evt.Player.User.SlgId, evt.Player.Position);
         }
 
         [EventHandler]
         public void OnPlayerLogout(PlayerLogoutEvent evt)
         {
-            if (AdvancedTeleportationPlugin.BackPos.ContainsKey(evt.User.SlgId))
-                AdvancedTeleportationPlugin.BackPos.Remove(evt.User.SlgId);
+            if (AdvancedTeleportationPlugin.Instance.BackPos.ContainsKey(evt.User.SlgId))
+                AdvancedTeleportationPlugin.Instance.BackPos.Remove(evt.User.SlgId);
         }
 
         [EventHandler]
