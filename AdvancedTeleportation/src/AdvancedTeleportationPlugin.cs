@@ -32,49 +32,37 @@ namespace AdvancedTeleportation
     [AsphaltPlugin]
     public class AdvancedTeleportationPlugin : IModKitPlugin, IDisableable
     {
-        public static AdvancedTeleportationPlugin Instance;
-
         private bool disabled;
         public static string VERSION = "v.2.0.0";
 
         [Inject]
-        public IPermissionService PermissionService { get; set; }
+        public static IPermissionService PermissionService { get; set; }
 
         [Inject]
         [DefaultValues(nameof(GetDefaultUserSettings))]
         [StorageLocation("user_settings")]
-        public IUserStorageCollection UserSettings { get; set; }
+        public static IUserStorageCollection UserSettings { get; set; }
 
         [Inject]
         [StorageLocation("storage/warps")]
-        public IStorage WarpsStorage { get; set; }
+        public static IStorage WarpsStorage { get; set; }
 
         [Inject]
         [StorageLocation("storage/homes/")]
-        public IUserStorageCollection HomesStorage { get; set; }
+        public static IUserStorageCollection HomesStorage { get; set; }
 
-        public Warps OldWarpsStorage { get; set; }
-        public Homes OldHomesStorage { get; set; }
+        public static Warps OldWarpsStorage { get; set; }
+        public static Homes OldHomesStorage { get; set; }
 
-        public Dictionary<string, Vector3> BackPos { get; set; }
-
-        /**
-        public void OnPreEnable()
-        {
-            if (PluginManager.Obj.GetPlugin<Asphalt.Api.Asphalt>() == null)
-                Disable("Dependency 'Asphalt-MDK' not found!");
-        }
-        **/
+        public static Dictionary<string, Vector3> BackPos { get; set; }
 
         public void OnEnable()
         {
-            Instance = this;
-
             if (IsDisabled())
                 return;
 
-            OldWarpsStorage = ClassSerializer<Warps>.Deserialize(Path.Combine(ServiceHelper.GetServerPluginFolder(this), "storage", "old_warps.json"));
-            OldHomesStorage = ClassSerializer<Homes>.Deserialize(Path.Combine(ServiceHelper.GetServerPluginFolder(this), "storage", "old_homes.json"));
+            OldWarpsStorage = ClassSerializer<Warps>.Deserialize(Path.Combine(ServiceHelper.GetServerPluginFolder(this.GetType()), "storage", "old_warps.json"));
+            OldHomesStorage = ClassSerializer<Homes>.Deserialize(Path.Combine(ServiceHelper.GetServerPluginFolder(this.GetType()), "storage", "old_homes.json"));
 
             BackPos = new Dictionary<string, Vector3>();
 
@@ -86,7 +74,7 @@ namespace AdvancedTeleportation
             return "AdvancedTeleportation";
         }
 
-        public KeyDefaultValue[] GetDefaultUserSettings()
+        public static KeyDefaultValue[] GetDefaultUserSettings()
         {
             return new KeyDefaultValue[]
             {
@@ -95,7 +83,7 @@ namespace AdvancedTeleportation
         }
 
         [Inject]
-        public DefaultPermission[] GetDefaultPermissions()
+        public static DefaultPermission[] GetDefaultPermissions()
         {
             return new DefaultPermission[]
             {

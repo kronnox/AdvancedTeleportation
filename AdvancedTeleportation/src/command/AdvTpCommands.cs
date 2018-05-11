@@ -47,16 +47,16 @@ namespace AdvancedTeleportation.command
         [ChatCommand("back", "Teleports you back to your last location before you got teleported.")]
         public static void BackCommand(User user)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "back"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "back"))
                 return;
 
-            if (!AdvancedTeleportationPlugin.Instance.BackPos.ContainsKey(user.SlgId))
+            if (!AdvancedTeleportationPlugin.BackPos.ContainsKey(user.SlgId))
             {
                 user.Player.SendTemporaryErrorAlreadyLocalized("You haven't been teleported yet since the last server restart...");
                 return;
             }
 
-            Vector3 backPos = AdvancedTeleportationPlugin.Instance.BackPos[user.SlgId];
+            Vector3 backPos = AdvancedTeleportationPlugin.BackPos[user.SlgId];
 
             user.Player.SetPosition(backPos);
             user.Player.SendTemporaryMessageAlreadyLocalized("Teleporting back...");
@@ -67,20 +67,20 @@ namespace AdvancedTeleportation.command
          */
         public static void PrintHelp(User user)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "advtp.help"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "advtp.help"))
                 return;
 
             //makeshift solution... TODO: Something more fancy
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--=[ AdvancedTeleportation Help ]=--</color></b>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "advtp.help"))
+            if (AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "advtp.help"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp help</color> - <color=#DCDCDC>Shows help-page for HomeCommands</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "warp.help"))
+            if (AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "warp.help"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/warp help</color> - <color=#DCDCDC>Shows help-page for all warp commands</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "home.help"))
+            if (AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "home.help"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home help</color> - <color=#DCDCDC>Shows help-page for all home commands</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "advtp.reload"))
+            if (AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "advtp.reload"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp reload</color> - <color=#DCDCDC>Reloads all config and storage files</color>", user, false);
-            if(AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "back"))
+            if(AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "back"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/back</color> - <color=#DCDCDC>Teleports you back to your last location before you got teleported</color>", user, false);
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--------------=[ page  1/1 ]=--------------</color></b>", user, false);
 
@@ -88,13 +88,13 @@ namespace AdvancedTeleportation.command
 
         public static void Reload(User user)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "advtp.reload"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "advtp.reload"))
                 return;
 
             user.Player.SendTemporaryMessageAlreadyLocalized("Reloading Permissions Service...");
             try
             {
-                AdvancedTeleportationPlugin.Instance.PermissionService.Reload();
+                AdvancedTeleportationPlugin.PermissionService.Reload();
                 user.Player.SendTemporaryMessageAlreadyLocalized("...Complete!");
             }
             catch (Exception e)
@@ -107,7 +107,7 @@ namespace AdvancedTeleportation.command
             user.Player.SendTemporaryMessageAlreadyLocalized("Reloading User Settings...");
             try
             {
-                AdvancedTeleportationPlugin.Instance.UserSettings.Reload();
+                AdvancedTeleportationPlugin.UserSettings.Reload();
                 user.Player.SendTemporaryMessageAlreadyLocalized("...Complete!");
             }
             catch (Exception e)
@@ -120,7 +120,7 @@ namespace AdvancedTeleportation.command
             user.Player.SendTemporaryMessageAlreadyLocalized("Reloading Homes...");
             try
             {
-                AdvancedTeleportationPlugin.Instance.HomesStorage.Reload();
+                AdvancedTeleportationPlugin.HomesStorage.Reload();
                 user.Player.SendTemporaryMessageAlreadyLocalized("...Complete!");
             }
             catch (Exception e)
@@ -133,7 +133,7 @@ namespace AdvancedTeleportation.command
             user.Player.SendTemporaryMessageAlreadyLocalized("Reloading Warps...");
             try
             {
-                AdvancedTeleportationPlugin.Instance.WarpsStorage.Reload();
+                AdvancedTeleportationPlugin.WarpsStorage.Reload();
                 user.Player.SendTemporaryMessageAlreadyLocalized("...Complete!");
             }
             catch (Exception e)
@@ -149,19 +149,19 @@ namespace AdvancedTeleportation.command
         {
             user.Player.SendTemporaryMessageAlreadyLocalized("Converting old warps...");
             int warpCount = 0;
-            foreach(KeyValuePair<string, Dictionary<string, float>> warp in AdvancedTeleportationPlugin.Instance.OldWarpsStorage.warps)
+            foreach(KeyValuePair<string, Dictionary<string, float>> warp in AdvancedTeleportationPlugin.OldWarpsStorage.warps)
             {
-                if (AdvancedTeleportationPlugin.Instance.WarpsStorage.Get(warp.Key) != null)
+                if (AdvancedTeleportationPlugin.WarpsStorage.Get(warp.Key) != null)
                     continue;
 
-                AdvancedTeleportationPlugin.Instance.WarpsStorage.Set(warp.Key, warp.Value);
+                AdvancedTeleportationPlugin.WarpsStorage.Set(warp.Key, warp.Value);
                 warpCount++;
             }
             user.Player.SendTemporaryMessageAlreadyLocalized($"... {warpCount} warps converted!");
 
             user.Player.SendTemporaryMessageAlreadyLocalized("Converting old homes...");
             int homeCount = 0;
-            foreach (KeyValuePair<string, Dictionary<string, float>> home in AdvancedTeleportationPlugin.Instance.OldHomesStorage.homes)
+            foreach (KeyValuePair<string, Dictionary<string, float>> home in AdvancedTeleportationPlugin.OldHomesStorage.homes)
             {
                 string[] parts = home.Key.Split(new char[] { '-' }, 2);
                 User l_user = UserManager.FindUserBySlgId(parts[0]);
@@ -169,10 +169,10 @@ namespace AdvancedTeleportation.command
                 if (parts.Length > 1)
                     name = parts[1];
 
-                if (AdvancedTeleportationPlugin.Instance.HomesStorage.GetStorage(user).Get(name) != null)
+                if (AdvancedTeleportationPlugin.HomesStorage.GetStorage(user).Get(name) != null)
                     continue;
 
-                AdvancedTeleportationPlugin.Instance.HomesStorage.GetStorage(user).Set(name, home.Value);
+                AdvancedTeleportationPlugin.HomesStorage.GetStorage(user).Set(name, home.Value);
                 homeCount++;
             }
             user.Player.SendTemporaryMessageAlreadyLocalized($"... {homeCount} homes converted!");

@@ -79,24 +79,24 @@ namespace AdvancedTeleportation.command
          */
         public static void PrintHomeHelp(User user)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "home.help"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "home.help"))
                 return;
 
             //makeshift solution... TODO: Something more fancy
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>--=[ HomeCommands - Home Help ]=--</color></b>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.HasPermission(user, "advtp.help"))
+            if (AdvancedTeleportationPlugin.PermissionService.HasPermission(user, "advtp.help"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/advtp help</color> - <color=#DCDCDC>Shows help-page for HomeCommands</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.HasPermission(user, "home.help"))
+            if (AdvancedTeleportationPlugin.PermissionService.HasPermission(user, "home.help"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home help</color> - <color=#DCDCDC>Shows help-page for all home commands</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.HasPermission(user, "home.teleport"))
+            if (AdvancedTeleportationPlugin.PermissionService.HasPermission(user, "home.teleport"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home [name]</color> - <color=#DCDCDC>Teleports you to your home</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.HasPermission(user, "home.set"))
+            if (AdvancedTeleportationPlugin.PermissionService.HasPermission(user, "home.set"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/sethome <name></color> - <color=#DCDCDC>Sets a new home or overrides an existing one</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.HasPermission(user, "home.remove"))
+            if (AdvancedTeleportationPlugin.PermissionService.HasPermission(user, "home.remove"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home remove,<name></color> - <color=#DCDCDC>Removes an existing home</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.HasPermission(user, "home.list"))
+            if (AdvancedTeleportationPlugin.PermissionService.HasPermission(user, "home.list"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home list</color> - <color=#DCDCDC>Lists all of your homes</color>", user, false);
-            if (AdvancedTeleportationPlugin.Instance.PermissionService.HasPermission(user, "home.setlimit"))
+            if (AdvancedTeleportationPlugin.PermissionService.HasPermission(user, "home.setlimit"))
                 ChatManager.ServerMessageToPlayerAlreadyLocalized("<color=white>/home setlimit,<Player>,<amount></color> - <color=#DCDCDC>Lists all of your homes</color>", user, false);
             ChatManager.ServerMessageToPlayerAlreadyLocalized("<b><color=white>-----------------=[ page  1/1 ]=-----------------</color></b>", user, false);
         }
@@ -107,7 +107,7 @@ namespace AdvancedTeleportation.command
          */
         public static void TeleportHome(User user, string id)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "home.teleport"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "home.teleport"))
                 return;
 
             string name = "home";
@@ -120,14 +120,14 @@ namespace AdvancedTeleportation.command
             }
 
             //home not found
-            if (AdvancedTeleportationPlugin.Instance.HomesStorage.GetHome(user, name) == null)
+            if (AdvancedTeleportationPlugin.HomesStorage.GetHome(user, name) == null)
             {
                 user.Player.SendTemporaryErrorAlreadyLocalized("This home wasn't set yet!");
                 return;
             }
 
             //teleportation
-            user.Player.SetPosition(AdvancedTeleportationPlugin.Instance.HomesStorage.GetPosition(user, name));
+            user.Player.SetPosition(AdvancedTeleportationPlugin.HomesStorage.GetPosition(user, name));
             user.Player.SendTemporaryMessageAlreadyLocalized("Returning to '" + name + "'...");
         }
 
@@ -137,7 +137,7 @@ namespace AdvancedTeleportation.command
          */
         public static void SetHome(User user, string id)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "home.set"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "home.set"))
                 return;
 
             string name = "home";
@@ -149,16 +149,16 @@ namespace AdvancedTeleportation.command
                 id = "-" + id;
             }
 
-            int limit = AdvancedTeleportationPlugin.Instance.UserSettings.GetStorage(user).GetInt("home-limit");
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.HasPermission(user, "home.ignorelimit") && limit != -1 &&
-                AdvancedTeleportationPlugin.Instance.HomesStorage.GetHomes(user)?.Count >= limit &&
-                AdvancedTeleportationPlugin.Instance.HomesStorage.GetHome(user, name) == null)
+            int limit = AdvancedTeleportationPlugin.UserSettings.GetStorage(user).GetInt("home-limit");
+            if (!AdvancedTeleportationPlugin.PermissionService.HasPermission(user, "home.ignorelimit") && limit != -1 &&
+                AdvancedTeleportationPlugin.HomesStorage.GetHomes(user)?.Count >= limit &&
+                AdvancedTeleportationPlugin.HomesStorage.GetHome(user, name) == null)
             {
                 user.Player.SendTemporaryErrorAlreadyLocalized("You have reached the limit of '" + limit + "' homes! Delete one first ('/home remove,<name>').");
                 return;
             }
 
-            AdvancedTeleportationPlugin.Instance.HomesStorage.SetPosition(user, name, user.Player.Position);
+            AdvancedTeleportationPlugin.HomesStorage.SetPosition(user, name, user.Player.Position);
             user.Player.SendTemporaryMessageAlreadyLocalized("Your home '" + name + "' has been successfully set to '" + user.Player.Position + "'!");
         }
 
@@ -168,7 +168,7 @@ namespace AdvancedTeleportation.command
          */
         public static void SetLimit(User user, string name, string sLimit)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "home.setlimit"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "home.setlimit"))
                 return;
 
             User target = UserManager.FindUserByName(name);
@@ -190,7 +190,7 @@ namespace AdvancedTeleportation.command
                 return;
             }
 
-            AdvancedTeleportationPlugin.Instance.UserSettings.GetStorage(user).SetInt("home-limit", limit);
+            AdvancedTeleportationPlugin.UserSettings.GetStorage(user).SetInt("home-limit", limit);
             
             user.Player.SendTemporaryMessageAlreadyLocalized("" + name + "'s home limit was sucessfully set to '" + sLimit + "'!");
         }
@@ -201,7 +201,7 @@ namespace AdvancedTeleportation.command
          */
         public static void RemoveHome(User user, string id)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "home.remove"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "home.remove"))
                 return;
 
             string name = "home";
@@ -214,13 +214,13 @@ namespace AdvancedTeleportation.command
             }
 
             //home not found
-            if (!AdvancedTeleportationPlugin.Instance.HomesStorage.GetHomes(user).ContainsKey(name))
+            if (!AdvancedTeleportationPlugin.HomesStorage.GetHomes(user).ContainsKey(name))
             {
                 user.Player.SendTemporaryErrorAlreadyLocalized("This home wasn't set yet!");
                 return;
             }
 
-            AdvancedTeleportationPlugin.Instance.HomesStorage.RemoveHome(user, name);
+            AdvancedTeleportationPlugin.HomesStorage.RemoveHome(user, name);
             user.Player.SendTemporaryMessageAlreadyLocalized("Your home '" + name + "' has been successfully removed!");
         }
 
@@ -229,10 +229,10 @@ namespace AdvancedTeleportation.command
          */
         public static void ListHomes(User user)
         {
-            if (!AdvancedTeleportationPlugin.Instance.PermissionService.CheckPermission(user, "home.list"))
+            if (!AdvancedTeleportationPlugin.PermissionService.CheckPermission(user, "home.list"))
                 return;
 
-            IDictionary<string, object> userHomes = AdvancedTeleportationPlugin.Instance.HomesStorage.GetHomes(user);
+            IDictionary<string, object> userHomes = AdvancedTeleportationPlugin.HomesStorage.GetHomes(user);
 
             //no homes set yet
             if (userHomes?.Count < 1)
